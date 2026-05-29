@@ -13,11 +13,15 @@ type WindowWithPluginActivators = Window & {
 
 const pluginName = 'growi-plugin-confirm-delete-text';
 
+console.log(`[${pluginName}] client-entry loaded`);
+
 const activate = (): void => {
+  console.log(`[${pluginName}] activate called`);
   activateDeleteConfirmation();
 };
 
 const deactivate = (): void => {
+  console.log(`[${pluginName}] deactivate called`);
   deactivateDeleteConfirmation();
 };
 
