@@ -4,6 +4,7 @@ const MODAL_SELECTOR = '.modal-content';
 const BODY_SELECTOR = '.modal-body';
 const DELETE_RECURSIVELY_SELECTOR = '#deleteRecursively';
 const DELETE_COMPLETELY_SELECTOR = '#deleteCompletely';
+const DELETE_OPTION_SELECTOR = `${DELETE_RECURSIVELY_SELECTOR}, ${DELETE_COMPLETELY_SELECTOR}`;
 
 let observer: MutationObserver | null = null;
 let activated = false;
@@ -52,7 +53,13 @@ function enhanceExistingModals(): void {
       continue;
     }
 
-    if (!isTargetDeleteModal(modal) || modal.querySelector('.growi-confirm-delete') != null) {
+    if (!isTargetDeleteModal(modal)) {
+      continue;
+    }
+
+    hideDeleteOptions(modal);
+
+    if (modal.querySelector('.growi-confirm-delete') != null) {
       continue;
     }
 
@@ -73,13 +80,25 @@ function isTargetDeleteModal(modal: HTMLElement): boolean {
   );
 }
 
+function hideDeleteOptions(modal: HTMLElement): void {
+  for (const checkbox of modal.querySelectorAll<HTMLInputElement>(DELETE_OPTION_SELECTOR)) {
+    checkbox.checked = false;
+    checkbox.removeAttribute('checked');
+
+    const formCheck = checkbox.closest('.form-check');
+    if (formCheck instanceof HTMLElement) {
+      formCheck.hidden = true;
+    }
+  }
+}
+
 function createConfirmationPanel(deleteButton: HTMLButtonElement): HTMLElement {
   const panel = document.createElement('div');
   panel.className = 'growi-confirm-delete';
 
   const title = document.createElement('div');
   title.className = 'growi-confirm-delete__title';
-  title.textContent = 'Type "Delete" to enable the delete button.';
+  title.textContent = '"ページを削除する" ボタンをを有効にするには "Delete" と入力してください。';
 
   const input = document.createElement('input');
   input.className = 'growi-confirm-delete__input';
@@ -98,8 +117,8 @@ function createConfirmationPanel(deleteButton: HTMLButtonElement): HTMLElement {
     const ready = normalizeText(input.value) === REQUIRED_TEXT;
     deleteButton.disabled = !ready;
     status.textContent = ready
-      ? 'The delete button is ready.'
-      : 'Type "Delete" to enable the button.';
+      ? '削除ボタンは有効です。'
+      : '有効にするには "Delete" と入力してください。';
     panel.dataset.state = ready ? 'ready' : 'waiting';
   };
 
