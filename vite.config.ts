@@ -6,7 +6,7 @@ export default defineConfig({
     rollupOptions: {
       input: ['/client-entry.tsx'],
       output: {
-        entryFileNames: 'client-entry',
+        entryFileNames: 'client-entry.js',
       },
     },
   },

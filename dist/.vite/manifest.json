@@ -1,6 +1,11 @@
 {
   "client-entry.tsx": {
-    "file": "assets/client-entry-UkuuiTgh.css",
-    "src": "client-entry.tsx"
+    "file": "client-entry.js",
+    "name": "client-entry",
+    "src": "client-entry.tsx",
+    "isEntry": true,
+    "css": [
+      "assets/client-entry-UkuuiTgh.css"
+    ]
   }
 }

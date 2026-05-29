@@ -4,7 +4,7 @@
   "description": "Require typing Delete before page deletion buttons become active in GROWI delete dialogs.",
   "license": "MIT",
   "type": "module",
-  "main": "dist/client-entry",
+  "main": "dist/client-entry.js",
   "files": [
     "dist",
     "README.md"
@@ -27,6 +27,6 @@
   "growiPlugin": {
     "schemaVersion": "4",
     "types": ["script"],
-    "clientEntry": "dist/client-entry"
+    "clientEntry": "dist/client-entry.js"
   }
 }
