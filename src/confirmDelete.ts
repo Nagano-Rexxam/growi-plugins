@@ -1,4 +1,4 @@
-const REQUIRED_TEXT = 'Delete';
+ï»¿const REQUIRED_TEXT = 'Delete';
 const DELETE_BUTTON_SELECTOR = 'button[data-testid="delete-page-button"]';
 const MODAL_SELECTOR = '.modal-content';
 const BODY_SELECTOR = '.modal-body';
@@ -98,7 +98,7 @@ function createConfirmationPanel(deleteButton: HTMLButtonElement): HTMLElement {
 
   const title = document.createElement('div');
   title.className = 'growi-confirm-delete__title';
-  title.textContent = '"ƒy[ƒW‚ğíœ‚·‚é" ƒ{ƒ^ƒ“‚ğ‚ğ—LŒø‚É‚·‚é‚É‚Í "Delete" ‚Æ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B';
+  title.textContent = '"ãƒšãƒ¼ã‚¸ã‚’å‰Šé™¤ã™ã‚‹" ãƒœã‚¿ãƒ³ã‚’ã‚’æœ‰åŠ¹ã«ã™ã‚‹ã«ã¯ "Delete" ã¨å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚';
 
   const input = document.createElement('input');
   input.className = 'growi-confirm-delete__input';
@@ -117,8 +117,8 @@ function createConfirmationPanel(deleteButton: HTMLButtonElement): HTMLElement {
     const ready = normalizeText(input.value) === REQUIRED_TEXT;
     deleteButton.disabled = !ready;
     status.textContent = ready
-      ? 'íœƒ{ƒ^ƒ“‚Í—LŒø‚Å‚·B'
-      : '—LŒø‚É‚·‚é‚É‚Í "Delete" ‚Æ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B';
+      ? 'å‰Šé™¤ãƒœã‚¿ãƒ³ã¯æœ‰åŠ¹ã§ã™ã€‚'
+      : 'æœ‰åŠ¹ã«ã™ã‚‹ã«ã¯ "Delete" ã¨å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚';
     panel.dataset.state = ready ? 'ready' : 'waiting';
   };
 
