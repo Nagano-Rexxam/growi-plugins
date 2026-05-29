@@ -1,24 +1,29 @@
 # growi-plugin-confirm-delete-text
 
-GROWI のページ削除ダイアログに `Delete` 入力欄を追加し、文字列が一致するまで削除ボタンを無効化するスクリプトプラグインです。
+GROWI delete dialogs now require typing `Delete` before the delete button becomes active.
 
-## 動作
+## Structure
 
-- ページ削除のモーダルだけを対象にします
-- 入力欄に `Delete` を完全一致で入力すると削除ボタンが有効になります
-- 既存の GROWI 側のチェック条件はそのまま残します
+- `client-entry.tsx`: entry point that registers `window.pluginActivators`
+- `src/confirmDelete.ts`: modal detection and confirmation logic
+- `src/styles.css`: styles for the confirmation UI
+- `vite.config.ts`: build configuration
 
-## セットアップ
+## Development
 
 ```bash
-pnpm install
-pnpm build
+npm install
+npm run build
 ```
 
-ビルド成果物は `dist/` に出力されます。
+To rebuild on changes:
 
-## 注意
+```bash
+npm run dev
+```
 
-- 画面上のモーダル構造に依存するため、GROWI のUI変更でセレクタ調整が必要になる可能性があります
-- 添付ファイル削除のダイアログは対象外です
+## Behavior
 
+- When a page delete modal appears, the plugin adds a confirmation input
+- The delete button stays disabled until the input value is exactly `Delete`
+- `deactivate` stops the MutationObserver

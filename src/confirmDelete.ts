@@ -5,14 +5,10 @@ const BODY_SELECTOR = '.modal-body';
 const DELETE_RECURSIVELY_SELECTOR = '#deleteRecursively';
 const DELETE_COMPLETELY_SELECTOR = '#deleteCompletely';
 
-let observer = null;
+let observer: MutationObserver | null = null;
 let activated = false;
 
-export default function (context) {
-  console.log("confirm-delete plugin loaded");
-}
-
-export function activateDeleteConfirmation() {
+export function activateDeleteConfirmation(): void {
   if (activated || typeof document === 'undefined') {
     return;
   }
@@ -20,23 +16,27 @@ export function activateDeleteConfirmation() {
   activated = true;
   enhanceExistingModals();
 
-  observer = new MutationObserver(enhanceExistingModals);
+  observer = new MutationObserver(() => {
+    enhanceExistingModals();
+  });
+
   if (document.body != null) {
     observer.observe(document.body, { childList: true, subtree: true });
-  } else {
-    window.addEventListener(
-      'DOMContentLoaded',
-      () => {
-        if (activated && observer != null && document.body != null) {
-          observer.observe(document.body, { childList: true, subtree: true });
-        }
-      },
-      { once: true },
-    );
+    return;
   }
+
+  window.addEventListener(
+    'DOMContentLoaded',
+    () => {
+      if (activated && observer != null && document.body != null) {
+        observer.observe(document.body, { childList: true, subtree: true });
+      }
+    },
+    { once: true },
+  );
 }
 
-export function deactivateDeleteConfirmation() {
+export function deactivateDeleteConfirmation(): void {
   if (!activated) {
     return;
   }
@@ -46,7 +46,7 @@ export function deactivateDeleteConfirmation() {
   observer = null;
 }
 
-function enhanceExistingModals() {
+function enhanceExistingModals(): void {
   for (const modal of document.querySelectorAll(MODAL_SELECTOR)) {
     if (!(modal instanceof HTMLElement)) {
       continue;
@@ -66,14 +66,14 @@ function enhanceExistingModals() {
   }
 }
 
-function isTargetDeleteModal(modal) {
+function isTargetDeleteModal(modal: HTMLElement): boolean {
   return (
     modal.querySelector(DELETE_RECURSIVELY_SELECTOR) instanceof HTMLInputElement &&
     modal.querySelector(DELETE_COMPLETELY_SELECTOR) instanceof HTMLInputElement
   );
 }
 
-function createConfirmationPanel(deleteButton) {
+function createConfirmationPanel(deleteButton: HTMLButtonElement): HTMLElement {
   const panel = document.createElement('div');
   panel.className = 'growi-confirm-delete';
 
@@ -94,7 +94,7 @@ function createConfirmationPanel(deleteButton) {
   const status = document.createElement('div');
   status.className = 'growi-confirm-delete__status';
 
-  const sync = () => {
+  const sync = (): void => {
     const ready = normalizeText(input.value) === REQUIRED_TEXT;
     deleteButton.disabled = !ready;
     status.textContent = ready
@@ -115,6 +115,6 @@ function createConfirmationPanel(deleteButton) {
   return panel;
 }
 
-function normalizeText(value) {
+function normalizeText(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
