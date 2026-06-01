@@ -5,6 +5,8 @@ const BODY_SELECTOR = '.modal-body';
 const DELETE_RECURSIVELY_SELECTOR = '#deleteRecursively';
 const DELETE_COMPLETELY_SELECTOR = '#deleteCompletely';
 const DELETE_OPTION_SELECTOR = `${DELETE_RECURSIVELY_SELECTOR}, ${DELETE_COMPLETELY_SELECTOR}`;
+const FOOTER_META_SELECTOR = 'footer .page-meta p';
+const FOOTER_AUTHOR_LINK_SELECTOR = 'span[role="link"], a[href^="/user/"]';
 
 let observer: MutationObserver | null = null;
 let activated = false;
@@ -16,9 +18,11 @@ export function activateDeleteConfirmation(): void {
 
   activated = true;
   enhanceExistingModals();
+  cleanFooterMetadata();
 
   observer = new MutationObserver(() => {
     enhanceExistingModals();
+    cleanFooterMetadata();
   });
 
   if (document.body != null) {
@@ -70,6 +74,40 @@ function enhanceExistingModals(): void {
     }
 
     modalBody.appendChild(createConfirmationPanel(deleteButton));
+  }
+}
+
+function cleanFooterMetadata(): void {
+  for (const paragraph of document.querySelectorAll(FOOTER_META_SELECTOR)) {
+    if (!(paragraph instanceof HTMLElement)) {
+      continue;
+    }
+
+    const authorLinks = paragraph.querySelectorAll(FOOTER_AUTHOR_LINK_SELECTOR);
+    if (authorLinks.length === 0) {
+      continue;
+    }
+
+    const byTextNode = Array.from(paragraph.childNodes).find((node) => {
+      return node.nodeType === Node.TEXT_NODE && node.textContent?.includes('by') === true;
+    });
+
+    if (byTextNode != null) {
+      byTextNode.textContent = byTextNode.textContent?.replace(/\s*by\s*$/, '') ?? '';
+    }
+
+    for (const authorLink of authorLinks) {
+      authorLink.remove();
+    }
+
+    const trailingTextNodes = Array.from(paragraph.childNodes).filter((node) => {
+      return node.nodeType === Node.TEXT_NODE && node.textContent?.trim() === '';
+    });
+    for (const node of trailingTextNodes) {
+      if (node.parentNode === paragraph) {
+        node.remove();
+      }
+    }
   }
 }
 
