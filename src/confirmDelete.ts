@@ -1,13 +1,21 @@
-ï»¿const REQUIRED_TEXT = 'Delete';
+const REQUIRED_TEXT = 'Delete';
 const DELETE_BUTTON_SELECTOR = 'button[data-testid="delete-page-button"]';
 const MODAL_SELECTOR = '.modal-content';
 const BODY_SELECTOR = '.modal-body';
 const DELETE_RECURSIVELY_SELECTOR = '#deleteRecursively';
 const DELETE_COMPLETELY_SELECTOR = '#deleteCompletely';
 const DELETE_OPTION_SELECTOR = `${DELETE_RECURSIVELY_SELECTOR}, ${DELETE_COMPLETELY_SELECTOR}`;
+const PAGE_TREE_CONTROL_BUTTON_SELECTOR =
+  '[data-testid="open-page-item-control-btn"] button, .btn-page-item-control';
+const PAGE_TREE_MENU_SELECTOR = '[data-testid="page-item-control-menu"]';
+const PAGE_TREE_DELETE_BUTTON_SELECTOR = 'button[data-testid="open-page-delete-modal-btn"]';
+const PAGE_TREE_ITEM_SELECTOR =
+  '[data-testid="grw-pagetree-item-container"], li[id^="grw-pagetree-list-"]';
+const PAGE_TREE_CHILD_INDICATOR_SELECTOR = 'button.btn-triangle, .grw-count-badge';
 
 let observer: MutationObserver | null = null;
 let activated = false;
+let activePageTreeItem: HTMLElement | null = null;
 
 export function activateDeleteConfirmation(): void {
   if (activated || typeof document === 'undefined') {
@@ -16,9 +24,12 @@ export function activateDeleteConfirmation(): void {
 
   activated = true;
   enhanceExistingModals();
+  enhanceExistingPageTreeMenus();
+  document.addEventListener('click', handleDocumentClick, true);
 
   observer = new MutationObserver(() => {
     enhanceExistingModals();
+    enhanceExistingPageTreeMenus();
   });
 
   if (document.body != null) {
@@ -43,6 +54,8 @@ export function deactivateDeleteConfirmation(): void {
   }
 
   activated = false;
+  activePageTreeItem = null;
+  document.removeEventListener('click', handleDocumentClick, true);
   observer?.disconnect();
   observer = null;
 }
@@ -73,6 +86,48 @@ function enhanceExistingModals(): void {
   }
 }
 
+function enhanceExistingPageTreeMenus(): void {
+  const hideDelete = activePageTreeItem instanceof HTMLElement && pageTreeItemHasChildren(activePageTreeItem);
+
+  for (const menu of document.querySelectorAll(PAGE_TREE_MENU_SELECTOR)) {
+    if (!(menu instanceof HTMLElement)) {
+      continue;
+    }
+
+    const deleteButton = menu.querySelector(PAGE_TREE_DELETE_BUTTON_SELECTOR);
+    if (!(deleteButton instanceof HTMLElement)) {
+      continue;
+    }
+
+    deleteButton.hidden = hideDelete;
+
+    const divider = deleteButton.previousElementSibling;
+    if (divider instanceof HTMLElement && divider.classList.contains('dropdown-divider')) {
+      divider.hidden = hideDelete;
+    }
+  }
+}
+
+function handleDocumentClick(event: MouseEvent): void {
+  if (!(event.target instanceof Element)) {
+    return;
+  }
+
+  const controlButton = event.target.closest(PAGE_TREE_CONTROL_BUTTON_SELECTOR);
+  if (!(controlButton instanceof HTMLElement)) {
+    return;
+  }
+
+  const pageTreeItem = controlButton.closest(PAGE_TREE_ITEM_SELECTOR);
+  activePageTreeItem = pageTreeItem instanceof HTMLElement ? pageTreeItem : null;
+
+  queueMicrotask(() => {
+    if (activated) {
+      enhanceExistingPageTreeMenus();
+    }
+  });
+}
+
 function isTargetDeleteModal(modal: HTMLElement): boolean {
   return (
     modal.querySelector(DELETE_RECURSIVELY_SELECTOR) instanceof HTMLInputElement &&
@@ -92,13 +147,17 @@ function hideDeleteOptions(modal: HTMLElement): void {
   }
 }
 
+function pageTreeItemHasChildren(pageTreeItem: HTMLElement): boolean {
+  return pageTreeItem.querySelector(PAGE_TREE_CHILD_INDICATOR_SELECTOR) != null;
+}
+
 function createConfirmationPanel(deleteButton: HTMLButtonElement): HTMLElement {
   const panel = document.createElement('div');
   panel.className = 'growi-confirm-delete';
 
   const title = document.createElement('div');
   title.className = 'growi-confirm-delete__title';
-  title.textContent = '"ãƒšãƒ¼ã‚¸ã‚’å‰Šé™¤ã™ã‚‹" ãƒœã‚¿ãƒ³ã‚’ã‚’æœ‰åŠ¹ã«ã™ã‚‹ã«ã¯ "Delete" ã¨å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚';
+  title.textContent = '"ƒy[ƒW‚ğíœ‚·‚é" ƒ{ƒ^ƒ“‚ğ‚ğ—LŒø‚É‚·‚é‚É‚Í "Delete" ‚Æ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B';
 
   const input = document.createElement('input');
   input.className = 'growi-confirm-delete__input';
@@ -117,8 +176,8 @@ function createConfirmationPanel(deleteButton: HTMLButtonElement): HTMLElement {
     const ready = normalizeText(input.value) === REQUIRED_TEXT;
     deleteButton.disabled = !ready;
     status.textContent = ready
-      ? 'å‰Šé™¤ãƒœã‚¿ãƒ³ã¯æœ‰åŠ¹ã§ã™ã€‚'
-      : 'æœ‰åŠ¹ã«ã™ã‚‹ã«ã¯ "Delete" ã¨å…¥åŠ›ã—ã¦ãã ã•ã„ã€‚';
+      ? 'íœƒ{ƒ^ƒ“‚Í—LŒø‚Å‚·B'
+      : '—LŒø‚É‚·‚é‚É‚Í "Delete" ‚Æ“ü—Í‚µ‚Ä‚­‚¾‚³‚¢B';
     panel.dataset.state = ready ? 'ready' : 'waiting';
   };
 
