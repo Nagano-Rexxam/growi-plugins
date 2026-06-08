@@ -73,7 +73,10 @@ function attachNavigationListeners(): void {
   if (!history.__growiPluginLocationChangePatched) {
     const wrapHistoryMethod = (methodName: 'pushState' | 'replaceState'): void => {
       const original = history[methodName];
-      history[methodName] = function patchedHistoryMethod(...args: Parameters<History['pushState']>): void {
+      history[methodName] = function patchedHistoryMethod(
+        this: History,
+        ...args: Parameters<History['pushState']>
+      ): void {
         original.apply(this, args);
         window.dispatchEvent(new Event('growi-plugin-locationchange'));
       } as History['pushState'];
@@ -113,10 +116,10 @@ function syncEditorModeManagers(forceReset = false): void {
       continue;
     }
 
-    let panel = manager.querySelector(`.${EDITOR_ENABLE_PANEL_CLASS}`);
+    let panel = findEditorEnablePanel(manager);
     if (!(panel instanceof HTMLElement)) {
-      panel = createEditorEnablePanel();
-      editorButton.insertAdjacentElement('afterend', panel);
+      panel = createEditorEnablePanel(editorButton);
+      manager.insertAdjacentElement('afterend', panel);
     }
 
     const checkbox = getEditorEnableCheckbox(panel);
@@ -134,39 +137,42 @@ function syncEditorModeManagers(forceReset = false): void {
   }
 }
 
-function createEditorEnablePanel(): HTMLElement {
+function findEditorEnablePanel(manager: Element): HTMLElement | null {
+  const sibling = manager.nextElementSibling;
+  if (sibling instanceof HTMLElement && sibling.classList.contains(EDITOR_ENABLE_PANEL_CLASS)) {
+    return sibling;
+  }
+
+  return null;
+}
+
+function createEditorEnablePanel(editorButton: HTMLButtonElement): HTMLElement {
   const panel = document.createElement('div');
   panel.className = EDITOR_ENABLE_PANEL_CLASS;
   panel.dataset.testid = 'growi-enable-editor';
+
+  const label = document.createElement('label');
+  label.className = 'growi-enable-editor__label';
+  label.htmlFor = EDITOR_ENABLE_CHECKBOX_ID;
 
   const checkbox = document.createElement('input');
   checkbox.className = 'growi-enable-editor__checkbox';
   checkbox.id = EDITOR_ENABLE_CHECKBOX_ID;
   checkbox.type = 'checkbox';
 
-  const label = document.createElement('label');
-  label.className = 'growi-enable-editor__label';
-  label.htmlFor = EDITOR_ENABLE_CHECKBOX_ID;
-  label.textContent = '編集を有効にする';
-
   const text = document.createElement('span');
   text.className = 'growi-enable-editor__text';
   text.textContent = '編集を有効にする';
 
   const sync = (): void => {
-    const editorButton = panel.parentElement?.querySelector(EDITOR_BUTTON_SELECTOR);
-    if (!(editorButton instanceof HTMLButtonElement)) {
-      return;
-    }
-
     syncEditorModeButtonState(editorButton, checkbox);
   };
 
   checkbox.addEventListener('change', sync);
   checkbox.addEventListener('click', sync);
+
   label.append(checkbox, text);
   panel.append(label);
-
   return panel;
 }
 
