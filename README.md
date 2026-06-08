@@ -1,31 +1,50 @@
 # growi-plugin-confirm-delete-text
 
-GROWI delete dialogs now require typing `Delete` before the delete button becomes active, and the page editor button now gets an injected `編集を有効にする` checkbox next to it that must be checked first.
+GROWI のページ編集画面と削除ダイアログを補助するプラグインです。
 
-## Structure
+## 機能
 
-- `client-entry.tsx`: entry point that registers `window.pluginActivators`
-- `src/confirmDelete.ts`: modal detection and confirmation logic
-- `src/styles.css`: styles for the confirmation UI
-- `vite.config.ts`: build configuration
+- 削除確認ダイアログで、`Delete` を入力するまで削除ボタンを無効化する
+- ページ下部の編集ログに表示される編集者情報を非表示にする
+- `Edit` ボタンの有効化をチェックボックスで切り替える
 
-## Development
+## 構成
+
+- `client-entry.tsx`: `window.pluginActivators` への登録
+- `src/confirmDelete.ts`: 削除確認の追加、編集者情報の非表示、編集ボタン制御
+- `src/styles.css`: 追加 UI のスタイル
+- `vite.config.ts`: ビルド設定
+
+## 開発
 
 ```bash
 npm install
 npm run build
 ```
 
-To rebuild on changes:
+開発中にローカルビルドを監視する場合:
 
 ```bash
 npm run dev
 ```
 
-## Behavior
+## GROWI へのインストール
 
-- When a page delete modal appears, the plugin adds a confirmation input
-- The delete button stays disabled until the input value is exactly `Delete`
-- The plugin injects an `編集を有効にする` checkbox next to the editor button
-- The editor button stays disabled until that checkbox is checked
-- `deactivate` stops the MutationObserver
+1. GROWI の `/admin/plugins` を開く
+2. リポジトリ URL に次を入力する
+
+```text
+https://github.com/Nagano-Rexxam/growi-plugins
+```
+
+3. ブランチ名に `main` を指定する
+4. `[インストール]` をクリックする
+5. 必要に応じて GROWI を再起動する
+
+## 動作メモ
+
+- ページの編集画面が表示されると、`Edit` ボタンの右側に「編集を有効にする」チェックボックスが表示される
+- チェックを入れるまで `Edit` ボタンは無効になる
+- ページ下部の編集ログにある編集者表示は自動で取り除かれる
+- 削除モーダルでは、`Delete` を入力するまで削除ボタンは有効にならない
+

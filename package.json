@@ -1,7 +1,7 @@
 {
   "name": "growi-plugin-confirm-delete-text",
   "version": "0.1.0",
-  "description": "Require typing Delete before page deletion buttons become active in GROWI delete dialogs, and gate editor mode behind the enable-editing checkbox.",
+  "description": "GROWI の削除ダイアログで Delete の入力を必須にし、編集モードは有効化チェックで切り替え、ページ下部の編集者情報も非表示にするプラグインです。",
   "license": "MIT",
   "type": "module",
   "main": "dist/client-entry.js",
