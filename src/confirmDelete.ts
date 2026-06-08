@@ -1,7 +1,10 @@
-﻿const REQUIRED_TEXT = 'Delete';
+const REQUIRED_TEXT = 'Delete';
 const DELETE_BUTTON_SELECTOR = 'button[data-testid="delete-page-button"]';
 const EDITOR_BUTTON_SELECTOR = 'button[data-testid="editor-button"]';
+const EDITOR_MODE_MANAGER_SELECTOR = 'fieldset[data-testid="grw-page-editor-mode-manager"], #grw-page-editor-mode-manager';
 const EDITOR_ENABLE_CHECKBOX_LABEL = '編集を有効にする';
+const EDITOR_ENABLE_PANEL_CLASS = 'growi-enable-editor';
+const EDITOR_ENABLE_CHECKBOX_ID = 'growi-enable-editor-checkbox';
 const MODAL_SELECTOR = '.modal-content';
 const BODY_SELECTOR = '.modal-body';
 const DELETE_RECURSIVELY_SELECTOR = '#deleteRecursively';
@@ -12,7 +15,6 @@ const FOOTER_AUTHOR_LINK_SELECTOR = 'span[role="link"], a[href^="/user/"]';
 
 let observer: MutationObserver | null = null;
 let activated = false;
-let editorCheckboxListenerAttached = false;
 
 export function activateDeleteConfirmation(): void {
   if (activated || typeof document === 'undefined') {
@@ -22,13 +24,12 @@ export function activateDeleteConfirmation(): void {
   activated = true;
   enhanceExistingModals();
   cleanFooterMetadata();
-  syncEditorModeButtonState();
-  attachEditorEnableCheckboxListener();
+  enhanceEditorModeManagers();
 
   observer = new MutationObserver(() => {
     enhanceExistingModals();
     cleanFooterMetadata();
-    syncEditorModeButtonState();
+    enhanceEditorModeManagers();
   });
 
   if (document.body != null) {
@@ -55,7 +56,6 @@ export function deactivateDeleteConfirmation(): void {
   activated = false;
   observer?.disconnect();
   observer = null;
-  detachEditorEnableCheckboxListener();
 }
 
 function enhanceExistingModals(): void {
@@ -82,6 +82,76 @@ function enhanceExistingModals(): void {
 
     modalBody.appendChild(createConfirmationPanel(deleteButton));
   }
+}
+
+function enhanceEditorModeManagers(): void {
+  for (const manager of document.querySelectorAll(EDITOR_MODE_MANAGER_SELECTOR)) {
+    if (!(manager instanceof HTMLElement)) {
+      continue;
+    }
+
+    const editorButton = manager.querySelector(EDITOR_BUTTON_SELECTOR);
+    if (!(editorButton instanceof HTMLButtonElement)) {
+      continue;
+    }
+
+    const existingPanel = manager.querySelector(`.${EDITOR_ENABLE_PANEL_CLASS}`);
+    if (existingPanel instanceof HTMLElement) {
+      const checkbox = getEditorEnableCheckbox(existingPanel);
+      if (checkbox != null) {
+        syncEditorModeButtonState(editorButton, checkbox);
+      }
+      continue;
+    }
+
+    const panel = createEditorEnablePanel(editorButton);
+    editorButton.insertAdjacentElement('beforebegin', panel);
+  }
+}
+
+function createEditorEnablePanel(editorButton: HTMLButtonElement): HTMLElement {
+  const panel = document.createElement('div');
+  panel.className = EDITOR_ENABLE_PANEL_CLASS;
+  panel.dataset.testid = 'growi-enable-editor';
+
+  const checkbox = document.createElement('input');
+  checkbox.className = 'growi-enable-editor__checkbox';
+  checkbox.id = EDITOR_ENABLE_CHECKBOX_ID;
+  checkbox.type = 'checkbox';
+
+  const label = document.createElement('label');
+  label.className = 'growi-enable-editor__label';
+  label.htmlFor = EDITOR_ENABLE_CHECKBOX_ID;
+  label.textContent = EDITOR_ENABLE_CHECKBOX_LABEL;
+
+  const sync = (): void => {
+    syncEditorModeButtonState(editorButton, checkbox);
+  };
+
+  checkbox.addEventListener('change', sync);
+  checkbox.addEventListener('click', sync);
+
+  panel.append(checkbox, label);
+  sync();
+  return panel;
+}
+
+function getEditorEnableCheckbox(panel: HTMLElement): HTMLInputElement | null {
+  const checkbox = panel.querySelector('input[type="checkbox"]');
+  return checkbox instanceof HTMLInputElement ? checkbox : null;
+}
+
+function syncEditorModeButtonState(editorButton: HTMLButtonElement, checkbox: HTMLInputElement): void {
+  const enabled = checkbox.checked;
+  editorButton.disabled = !enabled;
+  editorButton.toggleAttribute('aria-disabled', !enabled);
+
+  if (enabled) {
+    editorButton.removeAttribute('title');
+    return;
+  }
+
+  editorButton.title = '「編集を有効にする」をチェックすると編集できます。';
 }
 
 function cleanFooterMetadata(): void {
@@ -116,97 +186,6 @@ function cleanFooterMetadata(): void {
       }
     }
   }
-}
-
-function syncEditorModeButtonState(): void {
-  const editorButton = document.querySelector(EDITOR_BUTTON_SELECTOR);
-  if (!(editorButton instanceof HTMLButtonElement)) {
-    return;
-  }
-
-  const checkbox = findEditorEnableCheckbox();
-  const enabled = checkbox instanceof HTMLInputElement && checkbox.checked;
-  editorButton.disabled = !enabled;
-  editorButton.toggleAttribute('aria-disabled', !enabled);
-  if (enabled) {
-    editorButton.removeAttribute('title');
-  } else {
-    editorButton.title = '「編集を有効にする」をチェックすると編集できます。';
-  }
-}
-
-function attachEditorEnableCheckboxListener(): void {
-  if (editorCheckboxListenerAttached || typeof document === 'undefined') {
-    return;
-  }
-
-  document.addEventListener('change', handleEditorEnableCheckboxChange, true);
-  editorCheckboxListenerAttached = true;
-}
-
-function detachEditorEnableCheckboxListener(): void {
-  if (!editorCheckboxListenerAttached || typeof document === 'undefined') {
-    return;
-  }
-
-  document.removeEventListener('change', handleEditorEnableCheckboxChange, true);
-  editorCheckboxListenerAttached = false;
-}
-
-function handleEditorEnableCheckboxChange(event: Event): void {
-  if (!(event.target instanceof HTMLInputElement)) {
-    return;
-  }
-
-  if (event.target.type !== 'checkbox') {
-    return;
-  }
-
-  if (!isEditorEnableCheckbox(event.target)) {
-    return;
-  }
-
-  syncEditorModeButtonState();
-}
-
-function findEditorEnableCheckbox(): HTMLInputElement | null {
-  for (const checkbox of document.querySelectorAll<HTMLInputElement>('input[type="checkbox"]')) {
-    if (isEditorEnableCheckbox(checkbox)) {
-      return checkbox;
-    }
-  }
-
-  return null;
-}
-
-function isEditorEnableCheckbox(checkbox: HTMLInputElement): boolean {
-  const normalizedTarget = normalizeText(EDITOR_ENABLE_CHECKBOX_LABEL);
-  const labelTexts: string[] = [];
-
-  const wrappedLabel = checkbox.closest('label');
-  if (wrappedLabel != null) {
-    labelTexts.push(wrappedLabel.textContent ?? '');
-  }
-
-  if (checkbox.id !== '') {
-    for (const label of document.querySelectorAll('label')) {
-      if (label.htmlFor === checkbox.id) {
-        labelTexts.push(label.textContent ?? '');
-      }
-    }
-  }
-
-  const ariaLabel = checkbox.getAttribute('aria-label');
-  if (ariaLabel != null) {
-    labelTexts.push(ariaLabel);
-  }
-
-  const title = checkbox.getAttribute('title');
-  if (title != null) {
-    labelTexts.push(title);
-  }
-
-  return labelTexts.some((text) => normalizeText(text).includes(normalizedTarget));
 }
 
 function isTargetDeleteModal(modal: HTMLElement): boolean {
