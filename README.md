@@ -1,6 +1,6 @@
 # growi-plugin-confirm-delete-text
 
-GROWI delete dialogs now require typing `Delete` before the delete button becomes active.
+GROWI delete dialogs now require typing `Delete` before the delete button becomes active, and the page editor button stays disabled until the checkbox labeled `編集を有効にする` is checked.
 
 ## Structure
 
@@ -26,4 +26,5 @@ npm run dev
 
 - When a page delete modal appears, the plugin adds a confirmation input
 - The delete button stays disabled until the input value is exactly `Delete`
+- The editor button stays disabled until the checkbox labeled `編集を有効にする` is checked
 - `deactivate` stops the MutationObserver
