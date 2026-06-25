@@ -94,3 +94,8 @@
   cursor: pointer;
   user-select: none;
 }
+
+/* Hide the heading edit button shown by GROWI on hover. */
+.revision-head-edit-button {
+  display: none !important;
+}
